@@ -1,0 +1,24 @@
+---
+- name: make a build dir
+  file: state=directory name=/root/mariadb-dockerized owner=1000 group=1000
+
+- name: put Dockerfile
+  template: src=Dockerfile dest=/root/mariadb-dockerized/Dockerfile
+
+- name: put start_mysqld.sh
+  template: src=start_mysqld.sh dest=/root/mariadb-dockerized/start_mysqld.sh mode=0755
+
+- name: put mariadb.nix
+  template: src=mariadb.nix dest=/root/mariadb-dockerized/mariadb.nix
+
+- name: build mariadb.nix.tar.gz
+  shell: docker run --rm --volumes-from=nix-store -v /root/mariadb-dockerized:/mnt nix-builder /mnt/mariadb.nix creates=/root/mariadb-dockerized/mariadb.nix.tar.gz
+
+  #- name: put postgresql.rb
+  #  template: src=postgresql.rb dest=/root/postgresql-dockerized/postgresql.rb
+
+- name: build a Docker image for MariaDB
+  command: docker build -t gitinsky/mariadb:0.1.0 --rm /root/mariadb-dockerized
+
+- name: tag it as latest
+  command: docker build -t gitinsky/mariadb:latest --rm /root/mariadb-dockerized
